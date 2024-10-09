@@ -1,13 +1,11 @@
 
 # 输入法自动切换
 
-## 简介
-
 这是一个 MacOS 小工具，能够根据前台应用程序，自动切换输入法，提供更加高效的输入体验。
 
 ![Screenshot1](./images/screenshot1.png)
 
-> 警告！当前未广泛测试，有非常多离谱的bug 💦
+> 警告！此程序大量使用AI编程，未广泛测试，有非常多离谱的bug 💦
 
 ## 功能介绍
 
@@ -41,6 +39,10 @@
    可能需要手动修改组织和包名等信息
 
 3. **安装依赖**：
+
+   使用了以下依赖：
+   - [LaunchAtLogin](https://github.com/sindresorhus/LaunchAtLogin)
+   
    需要通过 Swift Package Manager 或 CocoaPods 安装依赖。在 Xcode 中，依赖通常会自动安装，但如果未自动安装，请在终端中运行以下命令（根据项目使用的包管理工具）：
 
    ```bash
