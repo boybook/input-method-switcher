@@ -4,7 +4,8 @@ import Carbon
 import Cocoa
 
 class InputMethodManager {
-    private var cachedInputMethods: [String: InputMethod]?
+    private var cachedInputMethods: [InputMethod]?
+    private var cachedInputMethodsDict: [String: InputMethod]?
     
     // 根据输入法ID获取输入法源
     func getInputSource(for identifier: String) -> TISInputSource? {
@@ -83,12 +84,13 @@ class InputMethodManager {
     // 获取所有可用输入法，返回列表
     func getAvailableInputMethods() -> [InputMethod] {
         if let cachedMethods = cachedInputMethods {
-            // 返回缓存的输入法列表
-            return Array(cachedMethods.values)
+            // 返回缓存的输入法列表å
+            return cachedMethods
         }
         
         var inputMethods: [InputMethod] = [InputMethod(id: "default", name: "-", icon: nil)]
         var inputMethodsMap: [String: InputMethod] = [:] // 用于缓存的 Map
+        inputMethodsMap["default"] = InputMethod(id: "default", name: "-", icon: nil)
         
         if let cfArray = TISCreateInputSourceList(nil, false)?.takeRetainedValue() {
             for cf in cfArray as NSArray {
@@ -121,7 +123,8 @@ class InputMethodManager {
             }
         }
         
-        cachedInputMethods = inputMethodsMap // 将缓存改为 Map
+        self.cachedInputMethods = inputMethods
+        self.cachedInputMethodsDict = inputMethodsMap
         return inputMethods
     }
 
@@ -138,7 +141,7 @@ class InputMethodManager {
     
     // 根据输入法ID获取缓存中的输入法
     func getCachedInputMethod(for key: String) -> InputMethod? {
-        return cachedInputMethods?[key]
+        return cachedInputMethodsDict?[key]
     }
 }
 

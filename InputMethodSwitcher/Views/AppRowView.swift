@@ -25,7 +25,9 @@ struct AppRowView: View {
             Picker("输入法", selection: $app.inputMethodID) {
                 ForEach(appMonitor.inputMethodManager.getAvailableInputMethods()) { inputMethod in
                     HStack {
-                        if let icon = inputMethod.icon {
+                        if inputMethod.id == "default" {
+                            // nothing
+                        } else if let icon = inputMethod.icon {
                             Image(nsImage: icon)
                                 .aspectRatio(contentMode: .fit)  // 确保图像按比例缩放
                                 .frame(width: 16, height: 16)  // 设置图标大小
@@ -34,7 +36,6 @@ struct AppRowView: View {
                                 .aspectRatio(contentMode: .fit)  // 确保图像按比例缩放
                                 .frame(width: 16, height: 16)  // 设置图标大小
                         }
-                            
                         Text(inputMethod.name)
                     }
                     .tag(inputMethod.id)
