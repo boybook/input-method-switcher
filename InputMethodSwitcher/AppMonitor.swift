@@ -9,34 +9,41 @@ class AppMonitor: ObservableObject {
     private var timer: Timer?
     @Published var appInputMethods: [String: String] = [:] // 应用程序名称到输入法的映射
     var inputMethodManager = InputMethodManager()
+    var popupController: PopupWindowController?
 
     init() {
         loadSettings()
         _ = inputMethodManager.getAvailableInputMethods()
-        setupAppFrontSwitchedHandler()
+        setupPopupController()
+        setupAppFrontSwitchHandler()
     }
-
-    // 设置应用切换的监听
-    func setupAppFrontSwitchedHandler() {
-        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            if let activeApp = NSWorkspace.shared.frontmostApplication {
-                let identifier = activeApp.bundleIdentifier ?? "Unknown"
-                let appName = activeApp.localizedName ?? "Unknown"
+    
+    func setupPopupController() {
+        self.popupController = PopupWindowController()
+    }
+    
+    func setupAppFrontSwitchHandler() {
+        NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(appDidActivate), name: NSWorkspace.didActivateApplicationNotification, object: nil)
                 
-                // 检查是否是不同的应用
-                if self.activeAppIdentifier != identifier {
-                    self.activeAppIdentifier = identifier
-                    self.activeAppName = appName
-                    self.appFrontSwitched()
-                }
-            }
-        }
+        DistributedNotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appDidActivate),
+            name: NSNotification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String),
+            object: nil
+        )
     }
-
-    // 前台应用切换时的回调
-    func appFrontSwitched() {
-        print("当前激活的应用程序是：\(self.activeAppName) (\(self.activeAppIdentifier)")
-        applyInputMethod(for: self.activeAppIdentifier)
+    
+    @objc func appDidActivate(notification: NSNotification) {
+        if let userInfo = notification.userInfo,
+           let app = userInfo[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+           let bundleIdentifier = app.bundleIdentifier,
+           let appName = app.localizedName
+        {
+            self.activeAppIdentifier = bundleIdentifier
+            self.activeAppName = appName
+            print("[DEBUG] 应用切换：\(appName) \(bundleIdentifier)")
+            applyInputMethod(for: bundleIdentifier)
+        }
     }
 
     func loadSettings() {
@@ -58,6 +65,11 @@ class AppMonitor: ObservableObject {
             if (inputMethodID != "default") {
                 print("[DEBUG] 切换到输入法ID：\(inputMethodID)")
                 inputMethodManager.switchInputMethod(to: inputMethodID)
+                // 展示 Popup 提示
+                if let method = inputMethodManager.getCachedInputMethod(for: inputMethodID),
+                    UserDefaults.standard.bool(forKey: "switchNotice") {
+                    self.popupController?.showAndAnimate(icon: method.icon?.toSwiftUIImage() ?? Image(systemName: "keyboard"), text: method.name)
+                }
             } else {
                 print("[DEBUG] 输入法 default")
             }

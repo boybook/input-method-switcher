@@ -23,6 +23,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // 请求辅助功能权限
         requestAccessibilityPermissions()
+        
+        // 创建 AppMonitor
+        self.appMonitor = AppMonitor()
     }
 
     @objc func openPreferences() {

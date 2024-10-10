@@ -16,7 +16,7 @@ struct GlobalSettingsView: View {
                             UserDefaults.standard.set(launchAtLogin, forKey: "launchAtLogin")
                         }
                     Divider().opacity(0.5)
-                    SettingRow(appName: "切换时在屏幕显示 TODO", isOn: $switchNotice)
+                    SettingRow(appName: "切换时在鼠标处显示", isOn: $switchNotice)
                         .onChange(of: switchNotice) {
                             UserDefaults.standard.set(switchNotice, forKey: "switchNotice")
                         }
