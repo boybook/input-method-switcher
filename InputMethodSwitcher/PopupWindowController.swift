@@ -130,7 +130,7 @@ struct InputMethodView: View {
             }
             Text(viewModel.text)
                 .foregroundColor(.white)
-                .font(.system(size: 13))
+                .font(.system(size: 12))
                 .fixedSize() // 确保 Text 根据内容自适应宽度
         }
         .padding(.vertical, 4)

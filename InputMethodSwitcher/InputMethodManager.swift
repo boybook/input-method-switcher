@@ -140,7 +140,6 @@ class InputMethodManager {
     func getCachedInputMethod(for key: String) -> InputMethod? {
         return cachedInputMethods?[key]
     }
-    
 }
 
 struct InputMethod: Identifiable {
