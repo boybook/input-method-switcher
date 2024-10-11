@@ -56,7 +56,7 @@ class PopupWindowController: NSWindowController {
         
         // 移动窗口到鼠标位置右下角
         let mouseLocation = NSEvent.mouseLocation
-        let position = NSPoint(x: mouseLocation.x + 16, y: mouseLocation.y - 24)
+        let position = NSPoint(x: mouseLocation.x - 8, y: mouseLocation.y - 64)
         
         window.setFrameOrigin(position)
         window.makeKeyAndOrderFront(nil)
@@ -139,7 +139,8 @@ struct InputMethodView: View {
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color.accentColor)
-                .shadow(color: Color.black.opacity(0.4), radius: 10, x: 0, y: 5)
+                .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 4)
+                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 4)
         )
         .scaleEffect(scale)
         .opacity(opacity)
@@ -154,6 +155,7 @@ struct InputMethodView: View {
                 opacity = 1.0
             }
         }
+        .padding(24)
     }
 }
 
