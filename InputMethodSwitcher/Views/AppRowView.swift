@@ -1,10 +1,9 @@
 import SwiftUI
-import CoreImage
-import CoreImage.CIFilterBuiltins
 
 struct AppRowView: View {
     @ObservedObject var app: InstalledApp
     @EnvironmentObject var appMonitor: AppMonitor
+    @Environment(\.colorScheme) var colorScheme  // 获取当前颜色模式
 
     var body: some View {
         HStack {
@@ -28,13 +27,22 @@ struct AppRowView: View {
                         if inputMethod.id == "default" {
                             // nothing
                         } else if let icon = inputMethod.icon {
-                            Image(nsImage: icon)
-                                .aspectRatio(contentMode: .fit)  // 确保图像按比例缩放
-                                .frame(width: 16, height: 16)  // 设置图标大小
+                            // 根据当前颜色模式选择显示原图标或反色图标
+                            if colorScheme == .dark, let iconInverted = inputMethod.iconInversion {
+                                Image(nsImage: iconInverted)  // 暗色模式下显示反色图标
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 16, height: 16)
+                            } else {
+                                Image(nsImage: icon)  // 亮色模式下显示正常图标
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 16, height: 16)
+                            }
                         } else {
+                            // 默认图标（keyboard），根据颜色模式调整颜色
                             Image(systemName: "keyboard")
-                                .aspectRatio(contentMode: .fit)  // 确保图像按比例缩放
-                                .frame(width: 16, height: 16)  // 设置图标大小
+                                .foregroundColor(colorScheme == .dark ? .white : .black)  // 暗色模式下变为白色，亮色模式下为黑色
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 16, height: 16)
                         }
                         Text(inputMethod.name)
                     }

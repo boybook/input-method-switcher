@@ -68,7 +68,7 @@ class AppMonitor: ObservableObject {
                 // 展示 Popup 提示
                 if let method = inputMethodManager.getCachedInputMethod(for: inputMethodID),
                     UserDefaults.standard.bool(forKey: "switchNotice") {
-                    self.popupController?.showAndAnimate(icon: method.icon?.toSwiftUIImage() ?? Image(systemName: "keyboard"), text: method.name)
+                    self.popupController?.showAndAnimate(icon: method.iconInversion?.toSwiftUIImage() ?? Image(systemName: "keyboard"), text: method.name)
                 }
             } else {
                 print("[DEBUG] 输入法 default")

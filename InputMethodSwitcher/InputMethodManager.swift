@@ -2,6 +2,7 @@ import SwiftUI
 import Combine
 import Carbon
 import Cocoa
+import CoreImage.CIFilterBuiltins
 
 class InputMethodManager {
     private var cachedInputMethods: [InputMethod]?
@@ -40,45 +41,73 @@ class InputMethodManager {
 //            let iconRef = OpaquePointer(iconRefPtr)
 //            // 使用 IconRef 创建 NSImage
 //            let icon = NSImage(iconRef: iconRef)
-//            return applyInversionIfNeeded(to: icon)
+//            return icon
 //        }
 
         // 如果图标引用不可用，尝试获取图标的 URL
         if let iconURLPtr = TISGetInputSourceProperty(inputSource, kTISPropertyIconImageURL) {
             let url = Unmanaged<CFURL>.fromOpaque(iconURLPtr).takeUnretainedValue() as URL
             if let icon = NSImage(contentsOf: url) {
-                return applyInversionIfNeeded(to: icon)
+                return icon
             }
         }
         
         return nil
     }
     
-    func isDarkModeEnabled() -> Bool {
-        let appearanceName = NSApp.effectiveAppearance.name
-        return appearanceName == .darkAqua || appearanceName == .vibrantDark
-    }
-    
-    // 应用反色效果的函数
-    func applyInversionIfNeeded(to nsImage: NSImage) -> NSImage {
-        guard let tiffData = nsImage.tiffRepresentation,
-              let ciImage = CIImage(data: tiffData) else {
-            return nsImage
-        }
+    // 应用反色效果
+    func applyInversion(to nsImage: NSImage?) -> NSImage? {
+        guard let nsImage = nsImage else { return nil }
 
-        let context = CIContext(options: nil)
-        let filter = CIFilter.colorInvert()  // 反色滤镜
+        // 创建一个新的 NSImage，用于存储处理后的图像表示
+        let invertedImage = NSImage(size: nsImage.size)
 
-        filter.inputImage = ciImage
+        for imageRep in nsImage.representations {
+            if let bitmapRep = imageRep as? NSBitmapImageRep,
+               let cgImage = bitmapRep.cgImage {
 
-        // 根据暗色模式判断是否应用反色
-        if isDarkModeEnabled() {
-            if let outputImage = filter.outputImage,
-               let cgImage = context.createCGImage(outputImage, from: outputImage.extent) {
-                return NSImage(cgImage: cgImage, size: nsImage.size)
+                // 创建 CIImage 并应用反色滤镜
+                let ciImage = CIImage(cgImage: cgImage)
+                let filter = CIFilter.colorInvert()
+                filter.inputImage = ciImage
+
+                let context = CIContext(options: nil)
+                if let outputImage = filter.outputImage,
+                   let outputCGImage = context.createCGImage(outputImage, from: ciImage.extent) {
+
+                    // 创建新的 NSBitmapImageRep，并保留原始尺寸和分辨率
+                    let outputImageRep = NSBitmapImageRep(cgImage: outputCGImage)
+
+                    // 设置尺寸以保留分辨率（重要）
+                    outputImageRep.size = bitmapRep.size
+
+                    // 将新的图像表示添加到 invertedImage
+                    invertedImage.addRepresentation(outputImageRep)
+                } else {
+                    // 如果处理失败，保留原始的图像表示
+                    invertedImage.addRepresentation(imageRep)
+                }
+            } else {
+                // 非位图类型 TODO 还需要更加细节的处理
+                guard let tiffData = nsImage.tiffRepresentation,
+                      let ciImage = CIImage(data: tiffData) else {
+                    return nsImage
+                }
+
+                let context = CIContext(options: nil)
+                let filter = CIFilter.colorInvert()  // 反色滤镜
+
+                filter.inputImage = ciImage
+
+                if let outputImage = filter.outputImage,
+                   let cgImage = context.createCGImage(outputImage, from: outputImage.extent) {
+                    return NSImage(cgImage: cgImage, size: nsImage.size)
+                }
+                return nsImage
             }
         }
-        return nsImage
+
+        return invertedImage
     }
 
     // 获取所有可用输入法，返回列表
@@ -110,8 +139,9 @@ class InputMethodManager {
                                 let name = getInputSourceLocalizedName(id: inputSourceID, inputSource: inputSource)
                                 print("[DEBUG-输入法] \(name) [\(inputSourceID)]")
                                 let icon = getInputSourceIcon(inputSource: inputSource)
+                                let iconInversion = applyInversion(to: icon)
                                 
-                                let inputMethod = InputMethod(id: inputSourceID, name: name, icon: icon)
+                                let inputMethod = InputMethod(id: inputSourceID, name: name, icon: icon, iconInversion: iconInversion)
                                 
                                 // 将输入法加入 Map 和 List
                                 inputMethods.append(inputMethod)
@@ -148,5 +178,6 @@ class InputMethodManager {
 struct InputMethod: Identifiable {
     var id: String
     var name: String
-    var icon: NSImage?  // 添加图标属性
+    var icon: NSImage?
+    var iconInversion: NSImage?
 }

@@ -126,6 +126,7 @@ struct InputMethodView: View {
                 icon
                     .resizable()
                     .aspectRatio(contentMode: .fit)
+                    .foregroundColor(.white)
                     .frame(width: 16, height: 16)
             }
             Text(viewModel.text)
