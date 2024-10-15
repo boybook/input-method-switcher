@@ -15,6 +15,7 @@ class AppMonitor: ObservableObject {
         loadSettings()
         _ = inputMethodManager.getAvailableInputMethods()
         setupPopupController()
+        //setupAppFrontSwitchHandlerLegacy()
         setupAppFrontSwitchHandler()
     }
     
@@ -22,15 +23,9 @@ class AppMonitor: ObservableObject {
         self.popupController = PopupWindowController()
     }
     
+    // 基于事件监听
     func setupAppFrontSwitchHandler() {
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(appDidActivate), name: NSWorkspace.didActivateApplicationNotification, object: nil)
-                
-        DistributedNotificationCenter.default.addObserver(
-            self,
-            selector: #selector(appDidActivate),
-            name: NSNotification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String),
-            object: nil
-        )
     }
     
     @objc func appDidActivate(notification: NSNotification) {
@@ -39,10 +34,28 @@ class AppMonitor: ObservableObject {
            let bundleIdentifier = app.bundleIdentifier,
            let appName = app.localizedName
         {
-            self.activeAppIdentifier = bundleIdentifier
-            self.activeAppName = appName
-            print("[DEBUG] 应用切换：\(appName) \(bundleIdentifier)")
-            applyInputMethod(for: bundleIdentifier)
+            if (bundleIdentifier != self.activeAppIdentifier && bundleIdentifier != Bundle.main.bundleIdentifier) {
+                self.activeAppIdentifier = bundleIdentifier
+                self.activeAppName = appName
+                print("[DEBUG] 应用切换：\(appName) \(bundleIdentifier)")
+                applyInputMethod(for: bundleIdentifier)
+            }
+        }
+    }
+    
+    // 基于计时器轮询
+    func setupAppFrontSwitchHandlerLegacy() {
+        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+            if let activeApp = NSWorkspace.shared.frontmostApplication {
+                let identifier = activeApp.bundleIdentifier ?? "Unknown"
+                let appName = activeApp.localizedName ?? "Unknown"
+                // 检查是否是不同的应用
+                if self.activeAppIdentifier != identifier && identifier != Bundle.main.bundleIdentifier {
+                    self.activeAppIdentifier = identifier
+                    self.activeAppName = appName
+                    self.applyInputMethod(for: identifier)
+                }
+            }
         }
     }
 

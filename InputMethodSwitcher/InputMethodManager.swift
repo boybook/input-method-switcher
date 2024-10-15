@@ -161,7 +161,7 @@ class InputMethodManager {
     // 切换到指定的输入法
     func switchInputMethod(to sourceID: String) {
         print("[DEBUG] 正在切换输入法...")
-        if let inputSource = getInputSource(for: sourceID) {
+        if let inputSource = self.getInputSource(for: sourceID) {
             print("[DEBUG] 找到匹配的输入法ID：\(sourceID)，正在切换...")
             TISSelectInputSource(inputSource)
         } else {
